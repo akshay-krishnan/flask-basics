@@ -48,17 +48,36 @@ def uploaded_file(filename):
 @app.route('/search/<query>')
 def searching(query):
     occurances = {}
+    primeOccurances = {}
+    query = query.lower()
+    words = query.split(' ')
     for item in os.listdir(UPLOAD_FOLDER):
         file = open(UPLOAD_FOLDER + item)
+        flag = False
         indexes = []
         count = 1
-        for line in file.readlines():
-            if query in str(line):
-                indexes.append(count)
-            count += 1
-        str1 = ' '.join(str(e) for e in indexes)
-        occurances[item] = str1
-    return jsonify(occurances)
+        lines = file.readlines()
+        for line in lines:
+            line = line.lower()
+            if query in line:
+                flag = True
+                indexes.append((count, line.index(query)))
+            count+=1
+        if flag is False:
+            indexes = []
+            count = 1
+            for line in lines:
+                for word in words:
+                    if word not in ['a', 'an', 'the', 'if', 'of', 'it']:
+                        if word in line:
+                            indexes.append((count, line.index(word)))
+                count += 1
+            occurances[item] = indexes
+        else:
+            primeOccurances[item] = indexes
+        # str1 = ' '.join(str(e) for e in indexes)
+        # occurances[item] = str1
+    return jsonify(primeOccurances)
 
 
 if __name__ == '__main__':
